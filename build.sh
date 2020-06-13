@@ -13,13 +13,14 @@ fi
 unzip -o $IMAGE_ZIP
 IMAGE_NAME=${IMAGE_ZIP%.zip}.img
 
+docker pull quay.io/lumastar/skydock:v0.3.0
 docker run --privileged --rm \
   -e MOUNT="/raspios-k8s" \
   -e SOURCE_IMAGE="/raspios-k8s/${IMAGE_NAME}" \
   -e SCRIPT="/raspios-k8s/setup.sh" \
   -e ADD_DATA_PART="false" \
   --mount type=bind,source="$(pwd)",destination=/raspios-k8s \
-  lumastar/raspbian-customiser:local-test
+  quay.io/lumastar/skydock:v0.3.0
 
 # Rename the image and export the name for use with other scripts.
 export RASPIOS_K8S_IMAGE_NAME="${IMAGE_NAME%.img}.raspios-k8s.img"
