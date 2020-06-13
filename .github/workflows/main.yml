@@ -4,7 +4,7 @@ on: [push]
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       image-name: ${{ steps.build.outputs.image-name }}
     steps:
@@ -18,7 +18,7 @@ jobs:
         echo "::set-output name=image-name::$RASPIOS_K8S_IMAGE_NAME"
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build
     if: github.event_name == 'release'
     steps:
