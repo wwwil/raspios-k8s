@@ -52,13 +52,16 @@ apt-get install -y \
   software-properties-common \
   gnupg2
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+# Set apt to retry up to 10 times to handle flakiness of Kubernetes repo.
+echo "APT::Acquire::Retries \"10\";" > /etc/apt/apt.conf.d/80retries
+
+curl --silent --show-error https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 cat <<EOF | tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
-curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+curl --silent --show-error --location https://download.docker.com/linux/debian/gpg | apt-key add -
 
 add-apt-repository \
   "deb [arch=arm64] https://download.docker.com/linux/debian \
