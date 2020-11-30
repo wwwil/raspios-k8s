@@ -105,3 +105,15 @@ apt-mark hold \
   kubelet \
   kubeadm \
   kubectl
+
+# Enable SSH but disabled password login
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+update-rc.d ssh enable
+
+# Change hostname.
+NEW_HOSTNAME="raspios-k8s"
+OLD_HOSTNAME=$(cat /etc/hostname)
+sed -i -e "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
+sed -i -e "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
+hostname "$NEW_HOSTNAME"
