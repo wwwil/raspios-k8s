@@ -14,6 +14,9 @@ KUBELET_VERSION="1.18.3-00"
 KUBEADM_VERSION="1.18.3-00"
 KUBECTL_VERSION="1.18.3-00"
 
+# Other assets used by this script are assumed to be located at /raspios-k8s.
+ASSET_DIR="/raspios-k8s"
+
 # Check this is running as root.
 if [[ $EUID -ne 0 ]]; then
    echo "ERROR: This script requires root privileges."
@@ -117,3 +120,7 @@ OLD_HOSTNAME=$(cat /etc/hostname)
 sed -i -e "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
 sed -i -e "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
 hostname "$NEW_HOSTNAME"
+
+# Copy boot script and set it to run using rc.local.
+cp "${ASSET_DIR}/boot.sh" /usr/local/bin/raspios-k8s-boot.sh
+sed -i -e '$i \/usr/local/bin/raspios-k8s-boot.sh &' testfile.local
