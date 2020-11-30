@@ -23,11 +23,6 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Remove unnecessary packages to make the OS a bit more 'lite'.
-# TODO: Use the RasPi OS Lite version when it is released.
-apt-get remove -y --purge x11-common
-apt-get autoremove -y
-
 # Disable swap.
 dphys-swapfile swapoff && \
   dphys-swapfile uninstall && \

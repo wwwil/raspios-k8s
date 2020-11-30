@@ -5,7 +5,7 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-IMAGE_LINK=https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2020-05-28/2020-05-27-raspios-buster-arm64.zip
+IMAGE_LINK=https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2020-08-24/2020-08-20-raspios-buster-arm64-lite.zip
 IMAGE_ZIP=$(basename $IMAGE_LINK)
 if [ ! -f "$IMAGE_ZIP" ]; then
    wget -nv $IMAGE_LINK
