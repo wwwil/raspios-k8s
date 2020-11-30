@@ -27,5 +27,6 @@ fi
 
 # TODO: Set static IP from config file in /boot.
 # TODO: Set hostname from config file in /boot.
+# TODO: Run kubeadm using config in /boot.
 
 exit 0
