@@ -20,6 +20,7 @@ docker run --privileged --rm \
   -e SOURCE_IMAGE="/raspios-k8s/${IMAGE_NAME}" \
   -e SCRIPT="/raspios-k8s/setup.sh" \
   -e ADD_DATA_PART="false" \
+  -e EXPAND=800 \
   --mount type=bind,source="$(pwd)",destination=/raspios-k8s \
   ${SKYDOCK_IMAGE}
 
