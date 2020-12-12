@@ -42,7 +42,7 @@ net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl --system
 
-# Add Docker and Kubernetes apt repos.
+# Install utilities.
 apt-get install -y \
   apt-transport-https \
   ca-certificates \
@@ -53,23 +53,24 @@ apt-get install -y \
 # Set apt to retry up to 10 times to handle flakiness of Kubernetes repo.
 echo "APT::Acquire::Retries \"10\";" > /etc/apt/apt.conf.d/80retries
 
+# Add Kubernetes apt repo.
 curl --silent --show-error https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-
 cat <<EOF | tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
+# Add Docker apt repo.
 curl --silent --show-error --location https://download.docker.com/linux/debian/gpg | apt-key add -
-
 add-apt-repository \
   "deb [arch=arm64] https://download.docker.com/linux/debian \
   $(lsb_release -cs) \
   stable"
 
-apt-get update
+# Update.
+until apt-get update; do echo "Retrying..."; done
 
 # Install Docker.
-apt-get install -y \
+apt-get install -y --no-install-recommends \
   containerd.io=${CONTAINERD_VERSION} \
   docker-ce=${DOCKER_VERSION} \
   docker-ce-cli=${DOCKERCLI_VERSION}
@@ -95,7 +96,7 @@ systemctl daemon-reload
 systemctl restart docker
 
 # Install kubeadm, kubelet and kubectl.
-apt-get install -y \
+apt-get install -y --no-install-recommends \
   kubelet=${KUBELET_VERSION} \
   kubeadm=${KUBEADM_VERSION} \
   kubectl=${KUBECTL_VERSION}
@@ -118,4 +119,16 @@ hostname "$NEW_HOSTNAME"
 
 # Copy boot script and set it to run using rc.local.
 cp "${ASSET_DIR}/boot.sh" /usr/local/bin/raspios-k8s-boot.sh
-sed -i -e '$i \/usr/local/bin/raspios-k8s-boot.sh &' testfile.local
+chmod +x /usr/local/bin/raspios-k8s-boot.sh
+cat <<EOF | tee /etc/rc.local
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+
+/usr/local/bin/raspios-k8s-boot.sh &
+exit 0
+EOF
