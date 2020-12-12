@@ -33,6 +33,6 @@ fi
 
 # Print information.
 echo "Hostname: $(hostname)"
-echo "IP addresses: $(hostname- I)"
+echo "IP addresses: $(hostname -I)"
 
 exit 0
