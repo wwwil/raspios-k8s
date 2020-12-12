@@ -40,14 +40,14 @@ sudo kubeadm init
 
 ## Build
 
-Build the image using:
+The image is built in Docker using [Skydock](https://github.com/wwwil/skydock)
+to run a [setup script](./setup.sh) to configure the OS and install the required
+packages. This can be run by the [build script](./build.sh) which will download
+and extract the base Raspberry Pi OS image.
 
 ```
 ./build
 ```
-
-This will download the base Raspberry Pi OS image, then use the Skydock Docker
-container to configure the OS and install the required packages.
 
 ## Roadmap
 
