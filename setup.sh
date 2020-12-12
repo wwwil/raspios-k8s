@@ -7,12 +7,11 @@ set -o xtrace
 
 # Setup RasPi OS arm64 to run Kubernetes.
 
-DOCKER_VERSION="5:19.03.8~3-0~debian-$(lsb_release -cs)"
-DOCKERCLI_VERSION=${DOCKER_VERSION}
-CONTAINERD_VERSION="1.2.13-1"
 KUBELET_VERSION="1.18.3-00"
 KUBEADM_VERSION="1.18.3-00"
 KUBECTL_VERSION="1.18.3-00"
+CRIO_OS=Debian_Testing
+CRIO_VERSION=1.18
 
 # Other assets used by this script are assumed to be located at /raspios-k8s.
 ASSET_DIR="/raspios-k8s"
@@ -59,41 +58,32 @@ cat <<EOF | tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
-# Add Docker apt repo.
-curl --silent --show-error --location https://download.docker.com/linux/debian/gpg | apt-key add -
-add-apt-repository \
-  "deb [arch=arm64] https://download.docker.com/linux/debian \
-  $(lsb_release -cs) \
-  stable"
+# Add cri-o apt repo.
+cat <<EOF | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+deb [arch=arm64] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$CRIO_OS/ /
+EOF
+cat <<EOF | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$CRIO_VERSION.list
+deb [arch=arm64] http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$CRIO_VERSION/$CRIO_OS/ /
+EOF
+curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:$CRIO_VERSION/$CRIO_OS/Release.key | apt-key add -
+curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$CRIO_OS/Release.key | apt-key add -
 
 # Update.
 until apt-get update; do echo "Retrying..."; done
 
-# Install Docker.
-apt-get install -y --no-install-recommends \
-  containerd.io=${CONTAINERD_VERSION} \
-  docker-ce=${DOCKER_VERSION} \
-  docker-ce-cli=${DOCKERCLI_VERSION}
-apt-mark hold \
-  containerd.io \
-  docker-ce \
-  docker-ce-cli
+# Install cri-o.
+apt-get install -y --no-install-recommends cri-o
+apt-mark hold cri-o
 
-# Add Docker configuration and reload the service.
-mkdir /etc/docker
-cat <<EOF | tee /etc/docker/daemon.json
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
+# Configure cri-o.
+cat <<EOF | tee /etc/crio/crio.conf.d/01-crio-runc.conf
+[crio.runtime.runtimes.runc]
+runtime_path = ""
+runtime_type = "oci"
+runtime_root = "/run/runc"
 EOF
-mkdir -p /etc/systemd/system/docker.service.d
 systemctl daemon-reload
-systemctl restart docker
+systemctl enable crio
 
 # Install kubeadm, kubelet and kubectl.
 apt-get install -y --no-install-recommends \
