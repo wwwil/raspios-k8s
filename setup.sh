@@ -7,12 +7,11 @@ set -o xtrace
 
 # Setup RasPi OS arm64 to run Kubernetes.
 
-DOCKER_VERSION="5:19.03.8~3-0~debian-$(lsb_release -cs)"
-DOCKERCLI_VERSION=${DOCKER_VERSION}
-CONTAINERD_VERSION="1.2.13-1"
 KUBELET_VERSION="1.18.3-00"
 KUBEADM_VERSION="1.18.3-00"
 KUBECTL_VERSION="1.18.3-00"
+
+CONTAINERD_VERSION="1.4.3-1"
 
 # Other assets used by this script are assumed to be located at /raspios-k8s.
 ASSET_DIR="/raspios-k8s"
@@ -33,12 +32,16 @@ systemctl disable dphys-swapfile
 sed -i 's/$/ cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1/' /boot/cmdline.txt
 
 # Set required kernel modules to load.
-echo 'br_netfilter' > /etc/modules-load.d/modules.conf
+cat <<EOF | tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
 
 # Let iptables see bridged traffic.
-cat <<EOF | tee /etc/sysctl.d/k8s.conf
+cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
 net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl --system
 
@@ -66,34 +69,22 @@ add-apt-repository \
   $(lsb_release -cs) \
   stable"
 
-# Update.
+# Update and upgrade.
 until apt-get update; do echo "Retrying..."; done
+apt-get upgrade -y
 
-# Install Docker.
-apt-get install -y --no-install-recommends \
-  containerd.io=${CONTAINERD_VERSION} \
-  docker-ce=${DOCKER_VERSION} \
-  docker-ce-cli=${DOCKERCLI_VERSION}
-apt-mark hold \
-  containerd.io \
-  docker-ce \
-  docker-ce-cli
+# Install containerd.
+apt-get install -y --no-install-recommends containerd.io=${CONTAINERD_VERSION}
+apt-mark hold containerd.io
 
-# Add Docker configuration and reload the service.
-mkdir /etc/docker
-cat <<EOF | tee /etc/docker/daemon.json
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
+# Add containerd configuration and reload the service.
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+cat <<EOF | tee -a /etc/containerd/config.toml
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+    SystemdCgroup = true
 EOF
-mkdir -p /etc/systemd/system/docker.service.d
-systemctl daemon-reload
-systemctl restart docker
 
 # Install kubeadm, kubelet and kubectl.
 apt-get install -y --no-install-recommends \
@@ -104,6 +95,9 @@ apt-mark hold \
   kubelet \
   kubeadm \
   kubectl
+
+# Copy in the example kubeadm config file.
+cp /raspios-k8s/kubeadm.yaml /home/pi/kubeadm.yaml
 
 # Enable SSH but disabled password login
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config

@@ -9,7 +9,7 @@ A Raspberry Pi OS arm64 image that's ready to run Kubernetes!
 :construction:
 
 This project customises the new Raspberry Pi OS arm64 image so its correctly 
-configured, and installs `docker`, `kubeadm`, `kubelet` and everything else
+configured, and installs `containerd`, `kubeadm`, `kubelet` and everything else
 required to run Kubernetes on a Raspberry Pi.
 
 ## Usage
@@ -35,7 +35,7 @@ ssh pi@raspios-k8s.local
 You can then use `kubeadm` to create a cluster:
 
 ```bash
-sudo kubeadm init
+sudo kubeadm init --config /home/pi/kubeadm.yaml
 ```
 
 ## Build
@@ -53,7 +53,6 @@ and extract the base Raspberry Pi OS image.
 
 Items to do:
 
-- Switch container runtime from Docker to Cri-o
 - Fetch images for kubeadm in setup.sh
 - Set up HA control plane
 - Establish procedure for joining nodes
