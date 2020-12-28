@@ -55,5 +55,6 @@ Items to do:
 
 - Fetch images for kubeadm in setup.sh
 - Set up HA control plane
-- Establish procedure for joining nodes
 - Add more boot automation
+  - Set hostname from `/boot/hostname` file
+  - Run kubeadm init or join if `/boot/kubeadm.yaml` present
