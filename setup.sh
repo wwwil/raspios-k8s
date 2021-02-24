@@ -5,13 +5,18 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-# Setup RasPi OS arm64 to run Kubernetes.
+# Setup RasPi OS to run Kubernetes.
 
 KUBELET_VERSION="1.18.3-00"
 KUBEADM_VERSION="1.18.3-00"
 KUBECTL_VERSION="1.18.3-00"
 
 CONTAINERD_VERSION="1.4.3-1"
+
+# If ARCH is not set default to arm64.
+if [ -z "$ARCH" ]; then
+  ARCH="arm64"
+fi
 
 # Other assets used by this script are assumed to be located at /raspios-k8s.
 ASSET_DIR="/raspios-k8s"
@@ -64,10 +69,9 @@ EOF
 
 # Add Docker apt repo.
 curl --silent --show-error --location https://download.docker.com/linux/debian/gpg | apt-key add -
-add-apt-repository \
-  "deb [arch=arm64] https://download.docker.com/linux/debian \
-  $(lsb_release -cs) \
-  stable"
+cat <<EOF | tee /etc/apt/sources.list.d/docker.list
+deb [arch=$ARCH] https://download.docker.com/linux/debian buster stable
+EOF
 
 # Update and upgrade.
 until apt-get update; do echo "Retrying..."; done
