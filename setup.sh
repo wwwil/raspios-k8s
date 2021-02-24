@@ -50,6 +50,10 @@ net.bridge.bridge-nf-call-ip6tables = 1
 EOF
 sysctl --system
 
+# Update and upgrade.
+until apt-get update; do echo "Retrying..."; done
+apt-get upgrade -y
+
 # Install utilities.
 apt-get install -y \
   apt-transport-https \
@@ -73,9 +77,8 @@ cat <<EOF | tee /etc/apt/sources.list.d/docker.list
 deb [arch=$ARCH] https://download.docker.com/linux/debian buster stable
 EOF
 
-# Update and upgrade.
+# Update.
 until apt-get update; do echo "Retrying..."; done
-apt-get upgrade -y
 
 # Install containerd.
 apt-get install -y --no-install-recommends containerd.io=${CONTAINERD_VERSION}
