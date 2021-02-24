@@ -18,25 +18,61 @@ required to run Kubernetes on a Raspberry Pi.
 
 Download the latest image from the [GitHub releases
 page](https://github.com/wwwil/raspios-k8s/releases) or [build it
-yourself](#Build). Then write the image to a micro SD card using a tool like
-[Etcher](https://www.balena.io/etcher/) or the `dd` command. Put the micro SD
-card into a Raspberry Pi and boot it up.
+yourself](#Build). Then write the image to an SD card using a tool like
+[Etcher](https://www.balena.io/etcher/) or `dd`.
 
-### 2. Connect
+### 2. Configure
 
-Once the Raspberry Pi has booted up you can then connect to it using SSH:
+#### SSH
+
+SSH password login is disabled in the RasPi OS K8s images. To connect, copy your
+SSH public key onto the `FAT` formatted `boot` partition of the SD card:
+
+```bash
+cp ~/.ssh/id_rsa.pub /Volumes/boot/
+```
+
+It will be moved to `/home/pi/.ssh` on boot.
+
+#### Hostname
+
+The hostname can be set by writing it to a `hostname` file in the `boot`
+partition.
+
+```bash
+echo "raspios-k8s-worker-01" > /Volumes/boot/hostname
+```
+
+This will be read and set on boot.
+
+### 3. Connect
+
+Put the SD card into a Raspberry Pi, boot it up and connect to it using SSH:
 
 ```
 ssh pi@raspios-k8s.local
 ```
 
-### 3. Run
+### 4. Run
 
-You can then use `kubeadm` to create a cluster:
+You can then use `kubeadm` to create a cluster. Edit the example configuration
+file on the Raspberry Pi at `/home/pi/kubeadm.yaml`, then run:
 
 ```bash
 sudo kubeadm init --config /home/pi/kubeadm.yaml
 ```
+
+To join an existing cluster get a join token from one of the current nodes:
+
+```bash
+kubeadm token create --print-join-command
+```
+
+Then run the displayed command on the new Raspberry Pi.
+
+See the [`kubeadm`
+documentation](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) for
+more details.
 
 ## Build
 
@@ -53,8 +89,6 @@ and extract the base Raspberry Pi OS image.
 
 Items to do:
 
-- Fetch images for kubeadm in setup.sh
 - Set up HA control plane
 - Add more boot automation
-  - Set hostname from `/boot/hostname` file
   - Run kubeadm init or join if `/boot/kubeadm.yaml` present
