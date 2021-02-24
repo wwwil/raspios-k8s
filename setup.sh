@@ -23,8 +23,8 @@ ASSET_DIR="/raspios-k8s"
 
 # Check this is running as root.
 if [[ $EUID -ne 0 ]]; then
-   echo "ERROR: This script requires root privileges."
-   exit 1
+  echo "ERROR: This script requires root privileges."
+  exit 1
 fi
 
 # Disable swap.
