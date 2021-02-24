@@ -106,6 +106,7 @@ apt-mark hold \
 
 # Copy in the example kubeadm config file.
 cp /raspios-k8s/kubeadm.yaml /home/pi/kubeadm.yaml
+chown pi:pi /home/pi/kubeadm.yaml
 
 # Enable SSH but disabled password login
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
