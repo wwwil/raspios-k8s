@@ -27,8 +27,16 @@ if [ -f /boot/id_rsa.pub ]; then
   rm /boot/id_rsa.pub
 fi
 
+# Change hostname.
+NEW_HOSTNAME=$(cat /boot/hostname)
+OLD_HOSTNAME=$(cat /etc/hostname)
+sed -i -e "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
+sed -i -e "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
+hostname "$NEW_HOSTNAME"
+rm /boot/hostname
+systemctl restart avahi-daemon.service
+
 # TODO: Set static IP from config file in /boot.
-# TODO: Set hostname from config file in /boot.
 # TODO: Run kubeadm using config in /boot.
 
 # Print information.
