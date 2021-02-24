@@ -87,12 +87,9 @@ apt-mark hold containerd.io
 # Add containerd configuration and reload the service.
 mkdir -p /etc/containerd
 containerd config default | tee /etc/containerd/config.toml
-cat <<EOF | tee -a /etc/containerd/config.toml
 
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-    SystemdCgroup = true
-EOF
+# Inject 'SystemdCgroup = true' into containerd configuration.
+sed -E -i 's/(\s*)(\[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options\])/\1\2\n\1  SystemdCgroup = true/' /etc/containerd/config.toml
 
 # Install kubeadm, kubelet and kubectl.
 apt-get install -y --no-install-recommends \
