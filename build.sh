@@ -33,7 +33,7 @@ fi
 unzip -o $IMAGE_ZIP
 IMAGE_NAME=${IMAGE_ZIP%.zip}.img
 
-SKYDOCK_IMAGE="quay.io/wwwil/skydock:v0.3.0"
+SKYDOCK_IMAGE="quay.io/wwwil/skydock:v0.3.1"
 docker pull ${SKYDOCK_IMAGE}
 docker run --privileged --rm \
   -e MOUNT="/raspios-k8s" \
