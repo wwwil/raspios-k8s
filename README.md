@@ -43,14 +43,15 @@ partition.
 echo "raspios-k8s-worker-01" > /Volumes/boot/hostname
 ```
 
-This will be read and set on boot.
+This will be read and set on boot. The default hostname is `raspios-k8s`.
 
 ### 3. Connect
 
-Put the SD card into a Raspberry Pi, boot it up and connect to it using SSH:
+Put the SD card into a Raspberry Pi, boot it up and connect to it using SSH. The
+hostname set in the previous step can be used, for example:
 
 ```
-ssh pi@raspios-k8s.local
+ssh pi@raspios-k8s-worker-01.local
 ```
 
 ### 4. Run
