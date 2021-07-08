@@ -1,0 +1,30 @@
+language: minimal
+
+sudo: required
+
+services:
+  - docker
+
+script:
+  - source ./build.sh
+
+deploy:
+- provider: releases
+  api_key: "$GITHUB_API_TOKEN"
+  file: "${RASPIOS_K8S_IMAGE_NAME}-${TRAVIS_BRANCH}.zip"
+  skip_cleanup: true
+  overwrite: true
+  draft: true
+  name: "${TRAVIS_BRANCH}"
+  prerelease: true
+  on:
+    tag: false
+    all_branches: true
+    condition: $TRAVIS_BRANCH != master
+- provider: releases
+  api_key: "$GITHUB_API_TOKEN"
+  file: "${RASPIOS_K8S_IMAGE_NAME}-${TRAVIS_BRANCH}.zip"
+  skip_cleanup: true
+  overwrite: true
+  on:
+    tags: true
