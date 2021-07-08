@@ -1,0 +1,41 @@
+name: Build raspios-k8s
+on: [push]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    outputs:
+      image-name: ${{ steps.build.outputs.image-name }}
+    steps:
+    - name: Checkout
+      id: checkout
+      uses: actions/checkout@v2
+    - name: Build
+      id: build
+      run: |
+        ./build.sh
+        echo "::set-output name=image-name::$RASPIOS_K8S_IMAGE_NAME"
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    needs: build
+    if: github.event_name == 'release'
+    steps:
+    - name: Create Image zip
+      id: create-image-zip
+      run: |
+        IMAGE_NAME=${{ needs.build.outputs.image-name }}
+        ZIP_NAME=${IMAGE_NAME%.img}.zip
+        zip $ZIP_NAME $IMAGE_NAME
+        echo "::set-output name=zip-name::$ZIP_NAME"
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/${GITHUB_REF}/assets?name=${{ steps.create-image-zip.outputs.zip-name }}
+        asset_path: ./${{ steps.create-image-zip.outputs.zip-name }}
+        asset_name: ${{ steps.create-image-zip.outputs.zip-name }}
+        asset_content_type: application/zip
